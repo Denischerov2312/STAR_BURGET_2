@@ -1,8 +1,45 @@
 from django.http import JsonResponse
 from django.templatetags.static import static
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import serializers
+from phonenumber_field.serializerfields import PhoneNumberField
+from .models import Product, Order, OrderItem
 
 
-from .models import Product
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all()
+    )
+
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity']
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    phonenumber = PhoneNumberField()
+    products = OrderItemSerializer(
+        many=True,
+        allow_empty=False,
+        write_only=True,
+    )
+
+    class Meta:
+        model = Order
+        fields = [
+            'id',
+            'firstname',
+            'lastname',
+            'phonenumber',
+            'address',
+            'products',
+        ]
+        extra_kwargs = {
+            'firstname': {'allow_blank': False, 'required': True},
+            'lastname': {'allow_blank': False, 'required': True},
+            'address': {'allow_blank': False, 'required': True},
+        }
 
 
 def banners_list_api(request):
@@ -27,6 +64,11 @@ def banners_list_api(request):
         'ensure_ascii': False,
         'indent': 4,
     })
+
+
+class TestView(APIView):
+    def get(self, request):
+        return Response({'status': 'DRF works!'})
 
 
 def product_list_api(request):

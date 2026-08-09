@@ -1,5 +1,5 @@
 from django.urls import path
-
+from .views import TestView
 from .views import product_list_api, banners_list_api, register_order
 
 
@@ -9,4 +9,5 @@ urlpatterns = [
     path('products/', product_list_api),
     path('banners/', banners_list_api),
     path('order/', register_order),
+    path('test/', TestView.as_view(), name='test-api'),
 ]
