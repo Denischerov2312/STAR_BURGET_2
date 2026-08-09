@@ -2,7 +2,8 @@ from django.http import JsonResponse
 from django.templatetags.static import static
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import serializers
+from rest_framework import status, serializers
+from rest_framework.decorators import api_view
 from phonenumber_field.serializerfields import PhoneNumberField
 from .models import Product, Order, OrderItem
 
@@ -40,6 +41,22 @@ class OrderSerializer(serializers.ModelSerializer):
             'lastname': {'allow_blank': False, 'required': True},
             'address': {'allow_blank': False, 'required': True},
         }
+
+    def create(self, validated_data):
+        products_data = validated_data.pop('products')
+        order = Order.objects.create(**validated_data)
+
+        order_items = [
+            OrderItem(
+                order=order,
+                product=item['product'],
+                quantity=item['quantity']
+            )
+            for item in products_data
+        ]
+        OrderItem.objects.bulk_create(order_items)
+
+        return order
 
 
 def banners_list_api(request):
@@ -99,6 +116,15 @@ def product_list_api(request):
     })
 
 
-def register_order(request):
-    # TODO это лишь заглушка
-    return JsonResponse({})
+# @api_view(['POST'])
+# def register_order(request):
+#     serializer = OrderSerializer(data=request.data)
+#     serializer.is_valid(raise_exception=True)
+#     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class OrderView(APIView):
+    def post(self, request):
+        serializer = OrderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save()
+        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
