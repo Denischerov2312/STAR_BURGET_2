@@ -109,7 +109,16 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    pass
+    list_display = [
+        'id',
+        'firstname',
+        'lastname',
+        'address',
+        'total_cost',
+    ]
+
+    def get_total(self, obj):
+        return obj.total_cost
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):

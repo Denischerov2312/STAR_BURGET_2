@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.templatetags.static import static
+from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
@@ -12,7 +13,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all()
     )
-
     class Meta:
         model = OrderItem
         fields = ['product', 'quantity']
@@ -25,6 +25,11 @@ class OrderSerializer(serializers.ModelSerializer):
         allow_empty=False,
         write_only=True,
     )
+    total = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=1,
+        read_only=True,
+        )
 
     class Meta:
         model = Order
@@ -35,6 +40,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'phonenumber',
             'address',
             'products',
+            'total',
         ]
         extra_kwargs = {
             'firstname': {'allow_blank': False, 'required': True},
@@ -44,18 +50,18 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         products_data = validated_data.pop('products')
-        order = Order.objects.create(**validated_data)
-
-        order_items = [
-            OrderItem(
-                order=order,
-                product=item['product'],
-                quantity=item['quantity']
-            )
-            for item in products_data
-        ]
-        OrderItem.objects.bulk_create(order_items)
-
+        with transaction.atomic():
+            order = Order.objects.create(**validated_data)
+            order_items = [
+                OrderItem(
+                    order=order,
+                    product=item['product'],
+                    quantity=item['quantity'],
+                    price=item['product'].price
+                )
+                for item in products_data
+            ]
+            OrderItem.objects.bulk_create(order_items)
         return order
 
 
