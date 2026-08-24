@@ -138,12 +138,19 @@ class Order(models.Model):
     address = models.TextField('Адресс')
 
     objects = OrderQuerySet.as_manager()
+
     @property
     def total_cost(self):
+        if hasattr(self, '_total_cost'):
+            return self._total_cost
         result = self.items.aggregate(
             total_cost=Sum(F('price') * F('quantity'))
         )
         return result['total_cost']
+
+    @total_cost.setter
+    def total_cost(self, value):
+        self._total_cost = value
 
     def __str__(self):
         return f'{self.firstname} {self.lastname}'
@@ -167,8 +174,10 @@ class OrderItem(models.Model):
         default=1,
         validators=[MinValueValidator(1)]
     )
-    price = models.IntegerField(
+    price = models.DecimalField(
         'Цена',
+        max_digits=8,
+        decimal_places=2,
         validators=[MinValueValidator(0)]
     )
 
@@ -177,4 +186,4 @@ class OrderItem(models.Model):
         verbose_name_plural = 'Элементы заказа'
 
     def __str__(self):
-        return f'{self.product.name} {self.quantity} штук'
+        return f'{self.product.name} {self.quantity} шт.'
