@@ -1,0 +1,71 @@
+{% extends 'base_restaurateur_page.html' %}
+
+{% block title %}Заказ #{{ order.id }} | Star Burger{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="page-header">
+      <a href="{% url 'restaurateur:view_orders' %}" class="btn btn-default pull-right">← Назад к списку заказов</a>
+      <h2>Заказ #{{ order.id }}</h2>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Данные клиента</h3>
+          </div>
+          <div class="panel-body">
+            <p><strong>Клиент:</strong> {{ order.firstname }} {{ order.lastname }}</p>
+            <p>
+              <strong>Телефон:</strong> 
+              {% if order.phonenumber %}
+                <a href="tel:{{ order.phonenumber }}">{{ order.phonenumber }}</a>
+              {% else %}
+                не указан
+              {% endif %}
+            </p>
+            <p><strong>Адрес доставки:</strong> {{ order.address }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">Итоговая стоимость</h3>
+          </div>
+          <div class="panel-body">
+            <h3>{{ order.total_cost|default:"0" }} руб.</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Состав заказа</h3>
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>Товар</th>
+          <th>Количество</th>
+          <th>Цена за ед.</th>
+          <th>Стоимость</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items.all %}
+          <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.quantity }} шт.</td>
+            <td>{{ item.price }} руб.</td>
+            <td>{% widthratio item.price 1 item.quantity %} руб.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <a href="{% url 'admin:foodcartapp_order_change' order.id %}?next={{ request.path|urlencode }}" class="btn btn-primary">
+      Редактировать заказ в админке
+    </a>
+  </div>
+{% endblock %}
