@@ -1,5 +1,5 @@
 from django import forms
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views import View
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
@@ -99,3 +99,12 @@ def view_orders(request):
     return render(request, template_name='order_items.html', context={
         'order_items': orders,
     })
+
+
+@user_passes_test(is_manager, login_url='restaurateur:login')
+def view_order(request, order_id):
+    order = get_object_or_404(
+        Order.objects.count_total_cost().prefetch_related('items__product'),
+        id=order_id
+    )
+    return render(request, 'order_details.html', context={'order': order})
