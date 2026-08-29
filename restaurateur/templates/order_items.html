@@ -3,30 +3,66 @@
 {% block title %}Необработанные заказы | Star Burger{% endblock %}
 
 {% block content %}
-  <center>
-    <h2>Необработанные заказы</h2>
-  </center>
-
-  <hr/>
-  <br/>
-  <br/>
   <div class="container">
-   <table class="table table-responsive">
-    <tr>
-      <th>ID заказа</th>
-      <th>Клиент</th>
-      <th>Телефон</th>
-      <th>Адрес доставки</th>
-    </tr>
+    <center>
+      <h2>Необработанные заказы</h2>
+    </center>
 
-    {% for item in order_items %}
-      <tr>
-        <td>-</td>
-        <td>-</td>
-        <td>-</td>
-        <td>-</td>
-      </tr>
-    {% endfor %}
-   </table>
+    <hr/>
+    <br/>
+
+    <table class="table table-responsive table-striped table-hover">
+      <thead>
+        <tr>
+          <th>ID заказа</th>
+          <th>Клиент</th>
+          <th>Телефон</th>
+          <th>Адрес доставки</th>
+          <th>Стоимость заказа</th>
+          <th>Товары</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in order_items %}
+          <tr>
+            <td><strong>#{{ order.id }}</strong></td>
+            <td>{{ order.firstname }} {{ order.lastname }}</td>
+            <td>
+              {% if order.phonenumber %}
+                <a href="tel:{{ order.phonenumber }}">{{ order.phonenumber }}</a>
+              {% else %}
+                не указан
+              {% endif %}
+            </td>
+            <td>{{ order.address }}</td>
+            <td><strong>{{ order.total_cost|default:"0" }} руб.</strong></td>
+            <td>
+              <details>
+                <summary style="cursor: pointer; color: #337ab7;">
+                  Посмотреть товары ({{ order.items.all|length }})
+                </summary>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                  {% for item in order.items.all %}
+                    <li>{{ item.product.name }} — {{ item.quantity }} шт. (по {{ item.price }} руб.)</li>
+                  {% endfor %}
+                </ul>
+              </details>
+            </td>
+            <td>
+              <a href="{% url 'admin:foodcartapp_order_change' order.id %}?next={{ request.path|urlencode }}" class="btn btn-xs btn-default">
+                Редактировать
+              </a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" class="text-center text-muted">
+              <em>Заказов пока нет.</em>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {% endblock %}
