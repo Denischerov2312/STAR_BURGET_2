@@ -9,63 +9,93 @@
       <h2>Заказ #{{ order.id }}</h2>
     </div>
 
-    <div class="row">
-      <div class="col-md-6">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Данные клиента</h3>
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="row">
+        <div class="col-md-7">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Данные клиента (редактируемые)</h3>
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-md-6 form-group {% if form.firstname.errors %}has-error{% endif %}">
+                  <label>{{ form.firstname.label }}</label>
+                  {{ form.firstname }}
+                  <span class="text-danger">{{ form.firstname.errors }}</span>
+                </div>
+                <div class="col-md-6 form-group {% if form.lastname.errors %}has-error{% endif %}">
+                  <label>{{ form.lastname.label }}</label>
+                  {{ form.lastname }}
+                  <span class="text-danger">{{ form.lastname.errors }}</span>
+                </div>
+              </div>
+
+              <div class="form-group {% if form.phonenumber.errors %}has-error{% endif %}">
+                <label>{{ form.phonenumber.label }}</label>
+                {{ form.phonenumber }}
+                <span class="text-danger">{{ form.phonenumber.errors }}</span>
+              </div>
+
+              <div class="form-group {% if form.address.errors %}has-error{% endif %}">
+                <label>{{ form.address.label }}</label>
+                {{ form.address }}
+                <span class="text-danger">{{ form.address.errors }}</span>
+              </div>
+            </div>
           </div>
-          <div class="panel-body">
-            <p><strong>Клиент:</strong> {{ order.firstname }} {{ order.lastname }}</p>
-            <p>
-              <strong>Телефон:</strong> 
-              {% if order.phonenumber %}
-                <a href="tel:{{ order.phonenumber }}">{{ order.phonenumber }}</a>
-              {% else %}
-                не указан
-              {% endif %}
-            </p>
-            <p><strong>Адрес доставки:</strong> {{ order.address }}</p>
+        </div>
+
+        <div class="col-md-5">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Итоговая стоимость</h3>
+            </div>
+            <div class="panel-body text-center">
+              <h2 style="margin: 10px 0;">{{ order.total_cost|default:"0" }} руб.</h2>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="col-md-6">
-        <div class="panel panel-primary">
-          <div class="panel-heading">
-            <h3 class="panel-title">Итоговая стоимость</h3>
-          </div>
-          <div class="panel-body">
-            <h3>{{ order.total_cost|default:"0" }} руб.</h3>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <h3>Состав заказа</h3>
-    <table class="table table-bordered table-striped">
-      <thead>
-        <tr>
-          <th>Товар</th>
-          <th>Количество</th>
-          <th>Цена за ед.</th>
-          <th>Стоимость</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in order.items.all %}
+      <h3>Состав заказа</h3>
+      {{ formset.management_form }}
+      <table class="table table-bordered table-striped">
+        <thead>
           <tr>
-            <td>{{ item.product.name }}</td>
-            <td>{{ item.quantity }} шт.</td>
-            <td>{{ item.price }} руб.</td>
-            <td>{% widthratio item.price 1 item.quantity %} руб.</td>
+            <th>Товар</th>
+            <th style="width: 140px;">Количество</th>
+            <th>Цена за ед.</th>
+            <th>Стоимость</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for item_form in formset %}
+            <tr>
+              <td>
+                {{ item_form.id }}
+                <strong>{{ item_form.instance.product.name }}</strong>
+              </td>
+              <td>
+                <div class="{% if item_form.quantity.errors %}has-error{% endif %}">
+                  {{ item_form.quantity }}
+                  <span class="text-danger">{{ item_form.quantity.errors }}</span>
+                </div>
+              </td>
+              <td>{{ item_form.instance.price }} руб.</td>
+              <td>{% widthratio item_form.instance.price 1 item_form.instance.quantity %} руб.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
-    <a href="{% url 'admin:foodcartapp_order_change' order.id %}?next={{ request.path|urlencode }}" class="btn btn-primary">
-      Редактировать заказ в админке
-    </a>
+      <div style="margin-top: 25px; margin-bottom: 50px;">
+        <button type="submit" class="btn btn-success">Сохранить изменения</button>
+        <a href="{% url 'admin:foodcartapp_order_change' order.id %}?next={{ request.path|urlencode }}" class="btn btn-default">
+          Редактировать заказ в админке
+        </a>
+      </div>
+    </form>
   </div>
 {% endblock %}

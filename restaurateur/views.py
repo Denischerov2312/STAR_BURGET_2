@@ -9,6 +9,7 @@ from django.contrib.auth import views as auth_views
 
 
 from foodcartapp.models import Product, Restaurant, Order
+from .forms import OrderForm, OrderItemFormSet
 
 
 class Login(forms.Form):
@@ -107,4 +108,47 @@ def view_order(request, order_id):
         Order.objects.count_total_cost().prefetch_related('items__product'),
         id=order_id
     )
-    return render(request, 'order_details.html', context={'order': order})
+
+    if request.method == 'POST':
+        form = OrderForm(request.POST, instance=order)
+        formset = OrderItemFormSet(request.POST, instance=order)
+
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            return redirect('restaurateur:view_order', order_id=order.id)
+    else:
+        form = OrderForm(instance=order)
+        formset = OrderItemFormSet(instance=order)
+
+    return render(
+        request,
+        'order_details.html',
+        context={
+            'order': order,
+            'form': form,
+            'formset': formset,
+        }
+    )
+
+@user_passes_test(is_manager, login_url='restaurateur:login')
+def edit_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+
+    if request.method == 'POST':
+        order_form = OrderForm(request.POST, instance=order)
+        formset = OrderItemFormSet(request.POST, instance=order)
+
+        if order_form.is_valid() and formset.is_valid():
+            order_form.save()
+            formset.save()
+            return redirect('restaurateur:view_order', order_id=order.id)
+    else:
+        order_form = OrderForm(instance=order)
+        formset = OrderItemFormSet(instance=order)
+
+    return render(request, 'order_edit.html', {
+        'order': order,
+        'order_form': order_form,
+        'formset': formset,
+    })
