@@ -15,9 +15,11 @@
       <thead>
         <tr>
           <th>ID заказа</th>
+          <th>Статус</th>
           <th>Клиент</th>
           <th>Телефон</th>
           <th>Адрес доставки</th>
+          <th>Комментарий</th>
           <th>Стоимость заказа</th>
           <th>Товары</th>
           <th>Действия</th>
@@ -31,6 +33,9 @@
                 <strong>#{{ order.id }}</strong>
               </a>
             </td>
+            <td>
+              <span class="label label-info">{{ order.get_status_display }}</span>
+            </td>
             <td>{{ order.firstname }} {{ order.lastname }}</td>
             <td>
               {% if order.phonenumber %}
@@ -40,6 +45,7 @@
               {% endif %}
             </td>
             <td>{{ order.address }}</td>
+            <td>{{ order.comment|default:"—" }}</td>
             <td><strong>{{ order.total_cost|default:"0" }} руб.</strong></td>
             <td>
               <details>
@@ -64,7 +70,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="7" class="text-center text-muted">
+            <td colspan="9" class="text-center text-muted">
               <em>Заказов пока нет.</em>
             </td>
           </tr>

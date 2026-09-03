@@ -131,11 +131,30 @@ class OrderQuerySet(models.QuerySet):
             total_cost=Sum(F('items__price') * F('items__quantity'))
         )
 
+
 class Order(models.Model):
+    STATUS_CHOICES = [
+        ('NEW', 'Новый'),
+        ('PREPARING', 'Готовится'),
+        ('DELIVERING', 'Доставляется'),
+        ('COMPLETED', 'Выполнен'),
+    ]
+
+    status = models.CharField(
+        'Статус',
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='NEW',
+        db_index=True,
+    )
+    comment = models.TextField(
+        'Комментарий менеджера',
+        blank=True,
+    )
     firstname = models.CharField('Имя', max_length=20, db_index=True)
     lastname = models.CharField('Фамилия', max_length=20, db_index=True)
     phonenumber = PhoneNumberField('Номер телефона', region='RU', db_index=True)
-    address = models.TextField('Адресс')
+    address = models.TextField('Адрес')
 
     objects = OrderQuerySet.as_manager()
 

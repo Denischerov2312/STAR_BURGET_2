@@ -9,6 +9,25 @@
       <h2>Заказ #{{ order.id }}</h2>
     </div>
 
+    {% if form.errors or formset.errors or formset.non_form_errors %}
+      <div class="alert alert-danger" role="alert">
+        <strong>Ошибка сохранения!</strong> Проверьте корректность введённых данных:
+        <ul>
+          {% for field, errors in form.errors.items %}
+            <li><strong>{{ field }}:</strong> {{ errors|striptags }}</li>
+          {% endfor %}
+          {% for form_errors in formset.errors %}
+            {% for field, errors in form_errors.items %}
+              <li><strong>Товар ({{ field }}):</strong> {{ errors|striptags }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in formset.non_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
     <form method="post">
       {% csrf_token %}
 
@@ -16,30 +35,42 @@
         <div class="col-md-7">
           <div class="panel panel-default">
             <div class="panel-heading">
-              <h3 class="panel-title">Данные клиента (редактируемые)</h3>
+              <h3 class="panel-title">Данные клиента и статус</h3>
             </div>
             <div class="panel-body">
+              <div class="form-group {% if form.status.errors %}has-error{% endif %}">
+                <label>Статус заказа</label>
+                {{ form.status }}
+                <span class="text-danger">{{ form.status.errors }}</span>
+              </div>
+
+              <div class="form-group {% if form.comment.errors %}has-error{% endif %}">
+                <label>Комментарий менеджера</label>
+                {{ form.comment }}
+                <span class="text-danger">{{ form.comment.errors }}</span>
+              </div>
+
               <div class="row">
                 <div class="col-md-6 form-group {% if form.firstname.errors %}has-error{% endif %}">
-                  <label>{{ form.firstname.label }}</label>
+                  <label>Имя</label>
                   {{ form.firstname }}
                   <span class="text-danger">{{ form.firstname.errors }}</span>
                 </div>
                 <div class="col-md-6 form-group {% if form.lastname.errors %}has-error{% endif %}">
-                  <label>{{ form.lastname.label }}</label>
+                  <label>Фамилия</label>
                   {{ form.lastname }}
                   <span class="text-danger">{{ form.lastname.errors }}</span>
                 </div>
               </div>
 
               <div class="form-group {% if form.phonenumber.errors %}has-error{% endif %}">
-                <label>{{ form.phonenumber.label }}</label>
+                <label>Телефон</label>
                 {{ form.phonenumber }}
                 <span class="text-danger">{{ form.phonenumber.errors }}</span>
               </div>
 
               <div class="form-group {% if form.address.errors %}has-error{% endif %}">
-                <label>{{ form.address.label }}</label>
+                <label>Адрес доставки</label>
                 {{ form.address }}
                 <span class="text-danger">{{ form.address.errors }}</span>
               </div>
@@ -53,7 +84,7 @@
               <h3 class="panel-title">Итоговая стоимость</h3>
             </div>
             <div class="panel-body text-center">
-              <h2 style="margin: 10px 0;">{{ order.total_cost|default:"0" }} руб.</h2>
+              <h2 style="margin: 15px 0;">{{ order.total_cost|default:"0" }} руб.</h2>
             </div>
           </div>
         </div>
@@ -93,7 +124,7 @@
       <div style="margin-top: 25px; margin-bottom: 50px;">
         <button type="submit" class="btn btn-success">Сохранить изменения</button>
         <a href="{% url 'admin:foodcartapp_order_change' order.id %}?next={{ request.path|urlencode }}" class="btn btn-default">
-          Редактировать заказ в админке
+          Редактировать в админке
         </a>
       </div>
     </form>
