@@ -98,7 +98,7 @@ def view_orders(request):
         .count_total_cost()
         .prefetch_related('items__product')
         .exclude(status='COMPLETED')
-        .order_by('-id')
+        .order_by('-created_at')
     )
     return render(request, 'order_items.html', context={'order_items': order_items})
 

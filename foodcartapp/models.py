@@ -158,6 +158,17 @@ class Order(models.Model):
 
     objects = OrderQuerySet.as_manager()
 
+    created_at = models.DateTimeField(
+        'создан',
+        auto_now_add=True,
+        db_index=True,
+    )
+    updated_at = models.DateTimeField(
+        'обновлен',
+        auto_now=True,
+        db_index=True,
+    )
+
     @property
     def total_cost(self):
         if hasattr(self, '_total_cost'):
@@ -173,6 +184,11 @@ class Order(models.Model):
 
     def __str__(self):
         return f'{self.firstname} {self.lastname}'
+
+    class Meta:
+        verbose_name = 'заказ'
+        verbose_name_plural = 'заказы'
+        ordering = ['-created_at']
 
 
 class OrderItem(models.Model):

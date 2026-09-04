@@ -117,6 +117,9 @@ class OrderAdmin(admin.ModelAdmin):
         'total_cost',
     ]
 
+    readonly_fields = ('created_at', 'updated_at')
+    ordering = ('-created_at',)
+
     def get_total(self, obj):
         return obj.total_cost
 
