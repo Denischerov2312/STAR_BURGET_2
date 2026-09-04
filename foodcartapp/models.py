@@ -139,6 +139,12 @@ class Order(models.Model):
         ('DELIVERING', 'Доставляется'),
         ('COMPLETED', 'Выполнен'),
     ]
+    CASH = 'CASH'
+    ELECTRONIC = 'ELECTRONIC'
+    PAYMENT_CHOICES = [
+        (CASH, 'Наличными'),
+        (ELECTRONIC, 'Электронно'),
+    ]
 
     status = models.CharField(
         'Статус',
@@ -166,6 +172,13 @@ class Order(models.Model):
     updated_at = models.DateTimeField(
         'обновлен',
         auto_now=True,
+        db_index=True,
+    )
+    payment_method = models.CharField(
+        'способ оплаты',
+        max_length=15,
+        choices=PAYMENT_CHOICES,
+        default=CASH,
         db_index=True,
     )
 

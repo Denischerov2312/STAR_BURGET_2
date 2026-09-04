@@ -6,7 +6,7 @@ from foodcartapp.models import Order, OrderItem
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['status', 'comment', 'firstname', 'lastname', 'phonenumber', 'address']
+        fields = ['status', 'comment', 'firstname', 'lastname', 'phonenumber', 'address', 'payment_method']
         widgets = {
             'status': forms.Select(attrs={'class': 'form-control'}),
             'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Внутренние заметки к заказу...'}),
@@ -14,6 +14,7 @@ class OrderForm(forms.ModelForm):
             'lastname': forms.TextInput(attrs={'class': 'form-control'}),
             'phonenumber': forms.TextInput(attrs={'class': 'form-control'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'payment_method': forms.Select(attrs={'class': 'form-control'}),
         }
 
 

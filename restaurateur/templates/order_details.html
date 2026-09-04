@@ -44,6 +44,12 @@
                 <span class="text-danger">{{ form.status.errors }}</span>
               </div>
 
+              <div class="form-group {% if form.payment_method.errors %}has-error{% endif %}">
+                <label>Способ оплаты</label>
+                {{ form.payment_method }}
+                <span class="text-danger">{{ form.payment_method.errors }}</span>
+              </div>
+
               <div class="form-group {% if form.comment.errors %}has-error{% endif %}">
                 <label>Комментарий менеджера</label>
                 {{ form.comment }}
@@ -88,7 +94,6 @@
             </div>
           </div>
 
-          <!-- Панель со сведениями о времени создания и изменения -->
           <div class="panel panel-default">
             <div class="panel-heading">
               <h3 class="panel-title">Информация о заказе</h3>
