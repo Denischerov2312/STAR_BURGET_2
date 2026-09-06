@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Count
 
 
 class Restaurant(models.Model):
@@ -181,6 +181,19 @@ class Order(models.Model):
         default=CASH,
         db_index=True,
     )
+
+    def get_suitable_restaurants(self):
+        order_product_ids = self.items.values_list('product_id', flat=True).distinct()
+        products_count = len(order_product_ids)
+
+        if not products_count:
+            return Restaurant.objects.none()
+        return Restaurant.objects.filter(
+            menu_items__product_id__in=order_product_ids,
+            menu_items__availability=True
+        ).annotate(
+            matched_items=Count('menu_items__product', distinct=True)
+        ).filter(matched_items=products_count)
 
     @property
     def total_cost(self):

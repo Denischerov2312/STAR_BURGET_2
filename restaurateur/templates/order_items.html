@@ -23,6 +23,7 @@
           <th>Адрес доставки</th>
           <th>Комментарий</th>
           <th>Стоимость заказа</th>
+          <th>Могут выполнить</th>
           <th>Товары</th>
           <th>Действия</th>
         </tr>
@@ -56,6 +57,19 @@
             <td>{{ order.comment|default:"—" }}</td>
             <td><strong>{{ order.total_cost|default:"0" }} руб.</strong></td>
             <td>
+              {% with restaurants=order.get_suitable_restaurants %}
+                {% if restaurants %}
+                  <ul style="padding-left: 15px; margin-bottom: 0;">
+                    {% for restaurant in restaurants %}
+                      <li>{{ restaurant.name }}</li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <span class="text-danger"><strong>Нет подходящего ресторана</strong></span>
+                {% endif %}
+              {% endwith %}
+            </td>
+            <td>
               <details>
                 <summary style="cursor: pointer; color: #337ab7;">
                   Посмотреть товары ({{ order.items.all|length }})
@@ -78,7 +92,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="11" class="text-center text-muted">
+            <td colspan="12" class="text-center text-muted">
               <em>Заказов пока нет.</em>
             </td>
           </tr>
