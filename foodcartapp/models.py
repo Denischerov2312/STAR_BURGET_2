@@ -182,7 +182,7 @@ class Order(models.Model):
         db_index=True,
     )
 
-    def get_suitable_restaurants(self):
+    def get_available_restaurants(self):
         order_product_ids = self.items.values_list('product_id', flat=True).distinct()
         products_count = len(order_product_ids)
 

@@ -57,7 +57,7 @@
             <td>{{ order.comment|default:"—" }}</td>
             <td><strong>{{ order.total_cost|default:"0" }} руб.</strong></td>
             <td>
-              {% with restaurants=order.get_suitable_restaurants %}
+              {% with restaurants=order.get_available_restaurants %}
                 {% if restaurants %}
                   <ul style="padding-left: 15px; margin-bottom: 0;">
                     {% for restaurant in restaurants %}
