@@ -9,6 +9,7 @@ from django.contrib.auth import views as auth_views
 
 
 from foodcartapp.models import Product, Restaurant, Order
+from foodcartapp.geocoding import get_coordinates
 from .forms import OrderForm, OrderItemFormSet
 
 
@@ -100,6 +101,8 @@ def view_orders(request):
         .exclude(status='COMPLETED')
         .order_by('-created_at')
     )
+    for order in order_items:
+        order.coords = get_coordinates(order.address)
     return render(request, 'order_items.html', context={'order_items': order_items})
 
 
@@ -109,7 +112,6 @@ def view_order(request, order_id):
         Order.objects.count_total_cost().prefetch_related('items__product'),
         id=order_id
     )
-
     if request.method == 'POST':
         form = OrderForm(request.POST, instance=order)
         formset = OrderItemFormSet(request.POST, instance=order)
@@ -121,6 +123,8 @@ def view_order(request, order_id):
     else:
         form = OrderForm(instance=order)
         formset = OrderItemFormSet(instance=order)
+
+    order.coords = get_coordinates(order.address)
 
     return render(
         request,

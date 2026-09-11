@@ -53,7 +53,14 @@
                 не указан
               {% endif %}
             </td>
-            <td>{{ order.address }}</td>
+            <td>
+              {{ order.address }}
+              {% if order.coords %}
+                <br/><small class="text-muted">({{ order.coords.0|floatformat:4 }}, {{ order.coords.1|floatformat:4 }})</small>
+              {% else %}
+                <br/><small class="text-danger">Ошибка определения координат</small>
+              {% endif %}
+            </td>
             <td>{{ order.comment|default:"—" }}</td>
             <td><strong>{{ order.total_cost|default:"0" }} руб.</strong></td>
             <td>
