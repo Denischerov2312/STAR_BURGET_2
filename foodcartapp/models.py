@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db.models import Sum, F, Count
+from foodcartapp.geocoding import get_coordinates
 
 
 class Restaurant(models.Model):
@@ -19,6 +20,15 @@ class Restaurant(models.Model):
         max_length=50,
         blank=True,
     )
+    lat = models.FloatField('широта', null=True, blank=True)
+    lon = models.FloatField('долгота', null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+            if self.address and (self.lat is None or self.lon is None):
+                coords = get_coordinates(self.address)
+                if coords:
+                    self.lon, self.lat = coords
+            super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'ресторан'
