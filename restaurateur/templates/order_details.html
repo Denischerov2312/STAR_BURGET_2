@@ -77,13 +77,13 @@
 
               <div class="form-group {% if form.address.errors %}has-error{% endif %}">
                 <p>
-                <strong>Адрес доставки:</strong> {{ order.address }}
-                {% if order.coords %}
-                  <span class="text-muted">({{ order.coords.0|floatformat:4 }}, {{ order.coords.1|floatformat:4 }})</span>
-                {% else %}
-                  <span class="text-danger">(Координаты не определены)</span>
-                {% endif %}
-              </p>
+                  <strong>Адрес доставки:</strong> {{ order.address }}
+                  {% if order.coords %}
+                    <span class="text-muted">({{ order.coords.0|floatformat:4 }}, {{ order.coords.1|floatformat:4 }})</span>
+                  {% else %}
+                    <span class="text-danger">(Координаты не определены)</span>
+                  {% endif %}
+                </p>
                 <span class="text-danger">{{ form.address.errors }}</span>
               </div>
             </div>
@@ -106,7 +106,25 @@
             </div>
             <div class="panel-body">
               <p><strong>Дата создания:</strong> <br/>{{ order.created_at|date:"j E Y г. H:i" }}</p>
-              <p style="margin-bottom: 0;"><strong>Последнее изменение:</strong> <br/>{{ order.updated_at|date:"j E Y г. H:i" }}</p>
+              <p><strong>Последнее изменение:</strong> <br/>{{ order.updated_at|date:"j E Y г. H:i" }}</p>
+              <hr/>
+              <p><strong>Могут выполнить:</strong></p>
+              {% if order.suitable_restaurants %}
+                <ul style="padding-left: 20px; margin-bottom: 0;">
+                  {% for restaurant in order.suitable_restaurants %}
+                    <li>
+                      {{ restaurant.name }}
+                      {% if restaurant.distance is not None %}
+                        ("{{ restaurant.distance|floatformat:2 }}" км)
+                      {% else %}
+                        <small class="text-danger">(расстояние не определено)</small>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <span class="text-danger"><strong>Нет подходящего ресторана</strong></span>
+              {% endif %}
             </div>
           </div>
         </div>

@@ -58,23 +58,28 @@
               {% if order.coords %}
                 <br/><small class="text-muted">({{ order.coords.0|floatformat:4 }}, {{ order.coords.1|floatformat:4 }})</small>
               {% else %}
-                <br/><small class="text-danger">Ошибка определения координат</small>
+                <br/><small class="text-danger">Координаты не определены</small>
               {% endif %}
             </td>
             <td>{{ order.comment|default:"—" }}</td>
             <td><strong>{{ order.total_cost|default:"0" }} руб.</strong></td>
             <td>
-              {% with restaurants=order.get_available_restaurants %}
-                {% if restaurants %}
-                  <ul style="padding-left: 15px; margin-bottom: 0;">
-                    {% for restaurant in restaurants %}
-                      <li>{{ restaurant.name }}</li>
-                    {% endfor %}
-                  </ul>
-                {% else %}
-                  <span class="text-danger"><strong>Нет подходящего ресторана</strong></span>
-                {% endif %}
-              {% endwith %}
+              {% if order.suitable_restaurants %}
+                <ul style="padding-left: 15px; margin-bottom: 0;">
+                  {% for restaurant in order.suitable_restaurants %}
+                    <li>
+                      {{ restaurant.name }}
+                      {% if restaurant.distance is not None %}
+                        ("{{ restaurant.distance|floatformat:2 }}" км)
+                      {% else %}
+                        <small class="text-danger">(расстояние не определено)</small>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <span class="text-danger"><strong>Нет подходящего ресторана</strong></span>
+              {% endif %}
             </td>
             <td>
               <details>

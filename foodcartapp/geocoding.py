@@ -1,5 +1,6 @@
 import requests
 import os
+import math
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -30,3 +31,22 @@ def get_coordinates(address):
         return None
 
 
+def calculate_distance(from_coords, to_coords):
+    if not from_coords or not to_coords:
+        return None
+
+    lon1, lat1 = from_coords
+    lon2, lat2 = to_coords
+
+    radius = 6371
+    dlat, dlon = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
+
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(dlon / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    return round(radius * c, 2)

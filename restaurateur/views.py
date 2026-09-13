@@ -9,7 +9,7 @@ from django.contrib.auth import views as auth_views
 
 
 from foodcartapp.models import Product, Restaurant, Order
-from foodcartapp.geocoding import get_coordinates
+from foodcartapp.geocoding import get_coordinates, calculate_distance
 from .forms import OrderForm, OrderItemFormSet
 
 
@@ -103,6 +103,17 @@ def view_orders(request):
     )
     for order in order_items:
         order.coords = get_coordinates(order.address)
+        suitable_restaurants = order.get_available_restaurants()
+        for restaurant in suitable_restaurants:
+            restaurant.coords = get_coordinates(restaurant.address)
+
+            if order.coords and restaurant.coords:
+                restaurant.distance = calculate_distance(
+                    order.coords, restaurant.coords
+                )
+            else:
+                restaurant.distance = None
+        order.suitable_restaurants = suitable_restaurants
     return render(request, 'order_items.html', context={'order_items': order_items})
 
 
@@ -125,6 +136,18 @@ def view_order(request, order_id):
         formset = OrderItemFormSet(instance=order)
 
     order.coords = get_coordinates(order.address)
+    suitable_restaurants = order.get_available_restaurants()
+
+    for restaurant in suitable_restaurants:
+        restaurant.coords = get_coordinates(restaurant.address)
+        if order.coords and restaurant.coords:
+            restaurant.distance = calculate_distance(
+                order.coords, restaurant.coords
+            )
+        else:
+            restaurant.distance = None
+
+    order.suitable_restaurants = suitable_restaurants
 
     return render(
         request,
