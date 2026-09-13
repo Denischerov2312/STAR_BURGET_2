@@ -94,27 +94,30 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    order_items = (
-        Order.objects
-        .count_total_cost()
-        .prefetch_related('items__product')
-        .exclude(status='COMPLETED')
-        .order_by('-created_at')
-    )
-    for order in order_items:
+    orders = Order.objects.all()
+
+    for order in orders:
         order.coords = get_coordinates(order.address)
-        suitable_restaurants = order.get_available_restaurants()
+        suitable_restaurants = list(
+            order.get_available_restaurants()
+        )
         for restaurant in suitable_restaurants:
             restaurant.coords = get_coordinates(restaurant.address)
-
             if order.coords and restaurant.coords:
                 restaurant.distance = calculate_distance(
                     order.coords, restaurant.coords
                 )
             else:
                 restaurant.distance = None
-        order.suitable_restaurants = suitable_restaurants
-    return render(request, 'order_items.html', context={'order_items': order_items})
+
+        order.suitable_restaurants = sorted(
+            suitable_restaurants,
+            key=lambda r: (r.distance is None, r.distance),
+        )
+
+    return render(
+        request, 'order_items.html', context={'order_items': orders}
+    )
 
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
@@ -136,7 +139,7 @@ def view_order(request, order_id):
         formset = OrderItemFormSet(instance=order)
 
     order.coords = get_coordinates(order.address)
-    suitable_restaurants = order.get_available_restaurants()
+    suitable_restaurants = list(order.get_available_restaurants())
 
     for restaurant in suitable_restaurants:
         restaurant.coords = get_coordinates(restaurant.address)
@@ -147,7 +150,9 @@ def view_order(request, order_id):
         else:
             restaurant.distance = None
 
-    order.suitable_restaurants = suitable_restaurants
+    order.suitable_restaurants = sorted(
+        suitable_restaurants, key=lambda r: (r.distance is None, r.distance)
+    )
 
     return render(
         request,
@@ -156,8 +161,9 @@ def view_order(request, order_id):
             'order': order,
             'form': form,
             'formset': formset,
-        }
+        },
     )
+
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def edit_order(request, order_id):
