@@ -1,3 +1,4 @@
+import copy
 from django import forms
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views import View
@@ -8,7 +9,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
 
-from foodcartapp.models import Product, Restaurant, Order
+from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
 from foodcartapp.geocoding import get_coordinates, calculate_distance
 from .forms import OrderForm, OrderItemFormSet
 
@@ -94,31 +95,49 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.all()
+    orders = Order.objects.count_total_cost().prefetch_related('items__product')
+
+    menu_items = RestaurantMenuItem.objects.filter(
+        availability=True
+    ).values_list('restaurant_id', 'product_id')
+
+    restaurant_products = {}
+    for rest_id, prod_id in menu_items:
+        restaurant_products.setdefault(rest_id, set()).add(prod_id)
+
+    restaurants_by_id = {r.id: r for r in Restaurant.objects.all()}
+
+    for restaurant in restaurants_by_id.values():
+        if restaurant.lat is None or restaurant.lon is None:
+            restaurant.coords = get_coordinates(restaurant.address)
+        else:
+            restaurant.coords = (restaurant.lon, restaurant.lat)
 
     for order in orders:
         order.coords = get_coordinates(order.address)
-        suitable_restaurants = list(
-            order.get_available_restaurants()
-        )
-        for restaurant in suitable_restaurants:
-            restaurant.coords = get_coordinates(restaurant.address)
-            if order.coords and restaurant.coords:
-                restaurant.distance = calculate_distance(
-                    order.coords, restaurant.coords
-                )
-            else:
-                restaurant.distance = None
+        order_product_ids = {item.product_id for item in order.items.all()}
+
+        suitable_restaurants = []
+        if order_product_ids:
+            for rest_id, prod_ids in restaurant_products.items():
+                if order_product_ids.issubset(prod_ids):
+                    restaurant = restaurants_by_id[rest_id]
+                    rest_copy = copy.copy(restaurant)
+
+                    if order.coords and rest_copy.coords:
+                        rest_copy.distance = calculate_distance(
+                            order.coords, rest_copy.coords
+                        )
+                    else:
+                        rest_copy.distance = None
+
+                    suitable_restaurants.append(rest_copy)
 
         order.suitable_restaurants = sorted(
-            suitable_restaurants,
-            key=lambda r: (r.distance is None, r.distance),
+            suitable_restaurants, key=lambda r: (r.distance is None, r.distance)
         )
 
-    return render(
-        request, 'order_items.html', context={'order_items': orders}
-    )
-
+    return render(request, 'order_items.html', context={'order_items': orders})
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_order(request, order_id):
