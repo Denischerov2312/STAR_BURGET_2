@@ -48,7 +48,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def validate_products(self, value):
         product_ids = [item['product'] for item in value]
-        products = Product.objects.filter(id__in=product_ids)
+        products = Product.objects.filter(id__in=product_ids).only('id', 'price')
         products_by_id = {product.id: product for product in products}
 
         missing_ids = set(product_ids) - set(products_by_id.keys())
@@ -116,7 +116,10 @@ class TestView(APIView):
 
 
 def product_list_api(request):
-    products = Product.objects.select_related('category').available()
+    products = Product.objects.select_related('category').only(
+        'id', 'name', 'price', 'special_status', 'description', 'image',
+        'category__id', 'category__name'
+    ).available()
 
     dumped_products = []
     for product in products:

@@ -4,12 +4,13 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.views import View
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
+from django.db.models import Prefetch
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
 
-from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
+from foodcartapp.models import Product, Restaurant, Order, OrderItem, RestaurantMenuItem
 from foodcartapp.geocoding import get_coordinates, calculate_distance
 from .forms import OrderForm, OrderItemFormSet
 
@@ -48,7 +49,7 @@ class LoginView(View):
             user = authenticate(request, username=username, password=password)
             if user:
                 login(request, user)
-                if user.is_staff:  # FIXME replace with specific permission
+                if user.is_staff:
                     return redirect("restaurateur:RestaurantView")
                 return redirect("start_page")
 
@@ -63,12 +64,12 @@ class LogoutView(auth_views.LogoutView):
 
 
 def is_manager(user):
-    return user.is_staff  # FIXME replace with specific permission
+    return user.is_staff
 
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_products(request):
-    restaurants = list(Restaurant.objects.order_by('name'))
+    restaurants = list(Restaurant.objects.order_by('name').only('id', 'name'))
     products = list(Product.objects.prefetch_related('menu_items'))
 
     products_with_restaurant_availability = []
@@ -95,7 +96,9 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.count_total_cost().prefetch_related('items__product')
+    orders = Order.objects.count_total_cost().prefetch_related(
+        Prefetch('items', queryset=OrderItem.objects.select_related('product'))
+    )
 
     menu_items = RestaurantMenuItem.objects.filter(
         availability=True
@@ -105,7 +108,7 @@ def view_orders(request):
     for rest_id, prod_id in menu_items:
         restaurant_products.setdefault(rest_id, set()).add(prod_id)
 
-    restaurants_by_id = {r.id: r for r in Restaurant.objects.all()}
+    restaurants_by_id = {r.id: r for r in Restaurant.objects.defer('contact_phone')}
 
     for restaurant in restaurants_by_id.values():
         if restaurant.lat is None or restaurant.lon is None:
@@ -139,10 +142,13 @@ def view_orders(request):
 
     return render(request, 'order_items.html', context={'order_items': orders})
 
+
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_order(request, order_id):
     order = get_object_or_404(
-        Order.objects.count_total_cost().prefetch_related('items__product'),
+        Order.objects.count_total_cost().prefetch_related(
+            Prefetch('items', queryset=OrderItem.objects.select_related('product'))
+        ),
         id=order_id
     )
     if request.method == 'POST':

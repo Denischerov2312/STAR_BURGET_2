@@ -43,7 +43,7 @@ class ProductQuerySet(models.QuerySet):
         products = (
             RestaurantMenuItem.objects
             .filter(availability=True)
-            .values_list('product')
+            .values_list('product_id', flat=True)
         )
         return self.filter(pk__in=products)
 
