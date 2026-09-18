@@ -4,15 +4,13 @@ from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from rest_framework.decorators import api_view
 from phonenumber_field.serializerfields import PhoneNumberField
 from .models import Product, Order, OrderItem
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all()
-    )
+    product = serializers.IntegerField()
+
     class Meta:
         model = OrderItem
         fields = ['product', 'quantity']
@@ -29,7 +27,7 @@ class OrderSerializer(serializers.ModelSerializer):
         max_digits=10,
         decimal_places=1,
         read_only=True,
-        )
+    )
 
     class Meta:
         model = Order
@@ -48,6 +46,22 @@ class OrderSerializer(serializers.ModelSerializer):
             'address': {'allow_blank': False, 'required': True},
         }
 
+    def validate_products(self, value):
+        product_ids = [item['product'] for item in value]
+        products = Product.objects.filter(id__in=product_ids)
+        products_by_id = {product.id: product for product in products}
+
+        missing_ids = set(product_ids) - set(products_by_id.keys())
+        if missing_ids:
+            raise serializers.ValidationError(
+                f'ID {list(missing_ids)} не найдены.'
+            )
+
+        for item in value:
+            item['product'] = products_by_id[item['product']]
+
+        return value
+
     def create(self, validated_data):
         products_data = validated_data.pop('products')
         with transaction.atomic():
@@ -62,11 +76,18 @@ class OrderSerializer(serializers.ModelSerializer):
                 for item in products_data
             ]
             OrderItem.objects.bulk_create(order_items)
+
+            total_cost = sum(
+                item['product'].price * item['quantity']
+                for item in products_data
+            )
+            order.total = total_cost
+            order._total_cost = total_cost
+
         return order
 
 
 def banners_list_api(request):
-    # FIXME move data to db?
     return JsonResponse([
         {
             'title': 'Burger',
@@ -122,15 +143,12 @@ def product_list_api(request):
     })
 
 
-# @api_view(['POST'])
-# def register_order(request):
-#     serializer = OrderSerializer(data=request.data)
-#     serializer.is_valid(raise_exception=True)
-#     return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 class OrderView(APIView):
     def post(self, request):
         serializer = OrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
-        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+        return Response(
+            OrderSerializer(order).data,
+            status=status.HTTP_201_CREATED
+        )
