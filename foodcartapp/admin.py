@@ -9,6 +9,8 @@ from .models import Restaurant
 from .models import RestaurantMenuItem
 from .models import Order
 from .models import OrderItem
+from .models import Geocache
+
 
 class RestaurantMenuItemInline(admin.TabularInline):
     model = RestaurantMenuItem
@@ -126,3 +128,9 @@ class OrderAdmin(admin.ModelAdmin):
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(Geocache)
+class GeocacheAdmin(admin.ModelAdmin):
+    list_display = ('address', 'lat', 'lon', 'updated_at')
+    search_fields = ('address',)
+    readonly_fields = ('updated_at',)

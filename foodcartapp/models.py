@@ -258,3 +258,24 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f'{self.product.name} {self.quantity} шт.'
+
+
+class Geocache(models.Model):
+    address = models.CharField(
+        'адрес',
+        max_length=255,
+        unique=True,
+        db_index=True,
+    )
+    lat = models.FloatField('широта', null=True, blank=True)
+    lon = models.FloatField('долгота', null=True, blank=True)
+    updated_at = models.DateTimeField(
+        'дата обновления',
+        auto_now=True,
+    )
+
+    class Meta:
+        verbose_name = 'кэш геокодирования'
+
+    def __str__(self):
+        return self.address
