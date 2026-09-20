@@ -170,7 +170,8 @@ class Order(models.Model):
     firstname = models.CharField('Имя', max_length=20, db_index=True)
     lastname = models.CharField('Фамилия', max_length=20, db_index=True)
     phonenumber = PhoneNumberField('Номер телефона', region='RU', db_index=True)
-    address = models.TextField('Адрес')
+
+    address = models.CharField('Адрес', max_length=255)
 
     objects = OrderQuerySet.as_manager()
 
@@ -238,7 +239,7 @@ class OrderItem(models.Model):
         Product,
         related_name='order_items',
         verbose_name='Товар',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
     )
     quantity = models.IntegerField(
         'Количество',
