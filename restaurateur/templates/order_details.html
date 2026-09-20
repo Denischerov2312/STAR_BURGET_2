@@ -74,8 +74,8 @@
                 {{ form.phonenumber }}
                 <span class="text-danger">{{ form.phonenumber.errors }}</span>
               </div>
-
               <div class="form-group {% if form.address.errors %}has-error{% endif %}">
+                <input type="hidden" name="address" value="{{ order.address }}">
                 <p>
                   <strong>Адрес доставки:</strong> {{ order.address }}
                   {% if order.coords %}
