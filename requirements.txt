@@ -33,3 +33,5 @@ tzdata==2026.4
     # via django
 urllib3==2.8.0
     # via requests
+environs==
+dj_database_url==
