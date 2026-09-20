@@ -7,7 +7,7 @@ load_dotenv()
 
 
 def fetch_coordinates_from_api(address):
-    apikey = os.getenv('SECRET_KEY')
+    apikey = os.getenv('YANDEX_GEOCODER_API_KEY')
     if not apikey:
         return None
 
