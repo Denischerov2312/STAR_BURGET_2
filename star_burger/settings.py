@@ -128,3 +128,12 @@ STATICFILES_DIRS = [
 
 CSRF_TRUSTED_ORIGINS = ['https://xn--67-9kcik8dcu.bond', 'https://www.xn--67-9kcik8dcu.bond']
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+MIDDLEWARE.append('rollbar.contrib.django.middleware.RollbarNotifierMiddleware')
+
+ROLLBAR = {
+    'access_token': env.str('ROLLBAR_TOKEN', ''),
+    'environment': env.str('ROLLBAR_ENVIRONMENT', 'development'),
+    'code_version': '1.0',
+    'root': str(BASE_DIR),
+}
