@@ -1,3 +1,5 @@
+.env
+
 bundles/**
 node_modules/
 media/
@@ -142,3 +144,4 @@ dmypy.json
 cython_debug/
 
 .parcel-cache/
+staticfiles/

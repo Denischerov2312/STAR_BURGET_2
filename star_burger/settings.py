@@ -3,7 +3,9 @@ import os
 import dj_database_url
 
 from environs import Env
+from dotenv import load_dotenv
 
+load_dotenv()
 
 env = Env()
 env.read_env()
@@ -123,3 +125,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "assets"),
     os.path.join(BASE_DIR, "bundles"),
 ]
+
+CSRF_TRUSTED_ORIGINS = ['https://xn--67-9kcik8dcu.bond', 'https://www.xn--67-9kcik8dcu.bond']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
